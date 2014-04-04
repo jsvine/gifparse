@@ -1,5 +1,5 @@
 import struct
-from core import Block, SubBlock
+from core import Block, SubBlock, TERMINATOR
 
 class Header(Block):
     pass
@@ -35,21 +35,37 @@ class ApplicationExtension(Extension):
         return cls(ext_bytes)
 
 class GraphicsControlExtension(Extension):
+    prefix = "\x21\xf9"
+
     @classmethod
     def extract(cls, io):
-        ext_bytes = "\x21\xf9"
-        block_size_bytes = io.read(1)
-        block_size = int(block_size_bytes.encode("hex"), 16)
-        packed_byte = io.read(1)
-        unpacked_bits = '{0:08b}'.format(int(packed_byte.encode("hex"), 16))
-        delay_bytes = io.read(2)
-        delay = struct.unpack('H', delay_bytes)[0]
-        transparent_color_index = io.read(1)
-        terminator = io.read(1)
-        ext_bytes += block_size_bytes + packed_byte + delay_bytes + transparent_color_index + terminator
-        ext = cls(ext_bytes)
-        ext.delay = delay
+        ext = cls(0)
+        ext.block_size_bytes = io.read(1)
+        block_size = int(ext.block_size_bytes.encode("hex"), 16)
+        ext.packed_byte = io.read(1)
+        unpacked_bits = '{0:08b}'.format(int(ext.packed_byte.encode("hex"), 16))
+        ext.delay_bytes = io.read(2)
+        ext.delay = struct.unpack('H', ext.delay_bytes)[0]
+        ext.transparent_color_index = io.read(1)
+        ext.terminator = io.read(1)
+        ext.raw = ext.reconstruct_bytes()
         return ext
+
+    def set_delay(self, centiseconds):
+        self.delay = centiseconds
+        self.delay_bytes = struct.pack("H", centiseconds)
+        self.raw = self.reconstruct_bytes()
+        return self
+
+    def reconstruct_bytes(self):
+        return "".join([
+            self.prefix,
+            self.block_size_bytes,
+            self.packed_byte,
+            self.delay_bytes,
+            self.transparent_color_index,
+            self.terminator
+        ])
 
 class ImageBlock(Block):
     @classmethod
