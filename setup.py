@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='gifparse',
-    version='0.0.0',
+    version='0.0.1',
     description="[Work in progress.] Parse the GIF 89a file format, down to the minor details. Pure Python, no dependencies.",
     long_description="",
     classifiers=[
