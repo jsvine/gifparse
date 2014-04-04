@@ -67,6 +67,25 @@ class GraphicsControlExtension(Extension):
             self.terminator
         ])
 
+class CommentExtension(Extension):
+    prefix = "\x21\xfe"
+
+    @classmethod
+    def extract(cls, io):
+        ext_bytes = cls.prefix
+        while True:
+            subblock = SubBlock.extract(io)
+            ext_bytes += subblock.raw
+            if subblock.raw[0] == "\x00": break
+        return ext
+
+    @classmethod
+    def encode(cls, comment_text):
+        ext_bytes = cls.prefix
+        sub_blocks = SubBlock.encode(comment_text)
+        ext_bytes += "".join(sb.raw for sb in sub_blocks)
+        return cls(ext_bytes)
+
 class ImageBlock(Block):
     @classmethod
     def extract(cls, io):
