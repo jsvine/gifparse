@@ -1,10 +1,14 @@
+import struct
+from io import IOBase, BytesIO, SEEK_CUR
+
+TERMINATOR = "\x00"
+
 class Block(object):
     def __init__(self, raw_bytes):
         self.raw = raw_bytes
         self.parse()
     def parse(self):
         pass
-
 
 class SubBlock(object):
     @classmethod
@@ -16,5 +20,17 @@ class SubBlock(object):
         subblock.data = subblock_data
         subblock.size = subblock_size
         return subblock
+
+    @classmethod
+    def encode(cls, data):
+        sub_blocks = []
+        stream = BytesIO(data)
+        while True:
+            next_bytes = stream.read(255)
+            byte_len = struct.pack("B", len(next_bytes))
+            sub_blocks.append(cls(byte_len + next_bytes))
+            if not len(next_bytes): break
+        return sub_blocks
+
     def __init__(self, raw_bytes):
         self.raw = raw_bytes
