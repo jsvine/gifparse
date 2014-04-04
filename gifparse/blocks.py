@@ -9,7 +9,7 @@ class LogicalScreenDescriptor(Block):
         packed_field = '{0:08b}'.format(int(self.raw[4].encode("hex"), 16))
         self.global_color_flag = int(packed_field[0], 2)
         self.color_resolution = int(packed_field[1:4], 2)
-        self.color_table_length = pow(2, self.color_resolution + 1)
+        self.color_table_length = pow(2, int(packed_field[4:], 2) + 1)
 
 class GlobalColorTable(Block):
     pass
